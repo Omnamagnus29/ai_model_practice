@@ -1,13 +1,12 @@
 import os
+from google.genai import types
 
 def get_files_info(working_directory, directory="."):
     try:
         working_dir_abs = os.path.abspath(working_directory)
         target_dir = os.path.normpath(os.path.join(working_dir_abs, directory))
 
-        # Will be True or False
-        valid_target_dir = os.path.commonpath([working_dir_abs, target_dir]) == working_dir_abs
-        
+               
         if not os.path.commonpath([working_dir_abs, target_dir]) == working_dir_abs:
             return f'Error: Cannot list "{directory}" as it is outside the permitted working directory'
 
@@ -20,11 +19,25 @@ def get_files_info(working_directory, directory="."):
             fullpath = os.path.join(target_dir, filename)
             size = os.path.getsize(fullpath)
             is_dir = os.path.isdir(fullpath)
-            files_info.append(f"{filename}: size={size}, is_dir={is_dir}")
+            files_info.append(f"{filename}: file_size={size}, is_dir={is_dir}")
         return "\n".join(files_info)
         
     except Exception as e:
         return f"Error: {e}"
+
+schema_get_files_info = types.FunctionDeclaration(
+    name="get_files_info",
+    description="Lists files in a specified directory relative to the working directory, providing file size and directory status",
+    parameters=types.Schema(
+        type=types.Type.OBJECT,
+        properties={
+            "directory": types.Schema(
+                type=types.Type.STRING,
+                description="Directory path to list files from, relative to the working directory (default is the working directory itself)",
+            ),
+        },
+    ),
+)
 
 
 

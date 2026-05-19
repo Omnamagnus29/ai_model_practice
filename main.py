@@ -4,6 +4,7 @@ from google import genai
 import argparse
 from google.genai import types
 from prompts import system_prompt
+from functions.call_function import available_functions
 
 
 load_dotenv()
@@ -24,10 +25,20 @@ messages = [types.Content(role="user", parts=[types.Part(text=args.user_prompt)]
 
 response = client.models.generate_content(
     model='gemini-2.5-flash', 
-    contents = messages,
-    config=types.GenerateContentConfig(system_instruction=system_prompt)
+    contents = messages,  
+    config=types.GenerateContentConfig(
+        tools=[available_functions],
+        system_instruction=system_prompt
+    )
     #contents=args.user_prompt, 
  )
+
+if response.function_calls:
+    for function_call in response.function_calls:
+        print(f"Calling function: {function_call.name}({function_call.args})")
+else:
+    print(response.text)
+
 if response.usage_metadata is None:
     raise RuntimeError("usage_metadata not available")
 
@@ -38,6 +49,4 @@ if args.verbose:
 
     
 
-#print(f"Prompt tokens: {response.usage_metadata.prompt_token_count}")
-#print(f"Response tokens: {response.usage_metadata.candidates_token_count}")
-print(response.text)
+
